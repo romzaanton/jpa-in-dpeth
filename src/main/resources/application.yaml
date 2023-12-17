@@ -1,0 +1,43 @@
+spring:
+  sql:
+    init:
+      mode: always
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:32021/postgres}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:password}
+    initialization-mode:
+    hikari:
+      pool-name: hc-pool-1
+      schema: ${DATABASE_SCHEMA:public}
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: io.code.art.jpa.in.depth.repository.PostgresDialectCustomized
+        jdbc:
+          batch_size: 5
+
+management:
+  endpoints:
+    enabled-by-default: true
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    shutdown:
+      enabled: true
+    beans:
+      enabled: true
+  info:
+    env:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    org:
+      hibernate: TRACE
