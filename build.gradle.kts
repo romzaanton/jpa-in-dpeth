@@ -22,7 +22,6 @@ repositories {
 }
 
 dependencies {
-//	implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -31,7 +30,16 @@ dependencies {
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	implementation("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")
+	testImplementation("com.github.javafaker:javafaker:1.0.2") {
+		exclude(group= "org.yaml", module = "snakeyaml")
+	}
+	testImplementation("org.yaml:snakeyaml:2.2")
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.boot:spring-boot-testcontainers")
+	testImplementation("org.junit.jupiter:junit-jupiter-engine:5.10.1")
+	testImplementation("org.testcontainers:junit-jupiter")
+	testImplementation("org.testcontainers:postgresql")
 }
 
 tasks.withType<Test> {

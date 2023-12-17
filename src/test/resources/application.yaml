@@ -1,0 +1,24 @@
+spring:
+  sql:
+    init:
+      mode: always
+  datasource:
+    hikari:
+      pool-name: hc-pool-1
+      schema: ${DATABASE_SCHEMA:public}
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: io.code.art.jpa.in.depth.repository.PostgresDialectCustomized
+        jdbc:
+          batch_size: 5
+
+logging:
+  level:
+    root: INFO
+    org:
+      hibernate: TRACE

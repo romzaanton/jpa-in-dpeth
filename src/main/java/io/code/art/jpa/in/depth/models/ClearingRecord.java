@@ -10,7 +10,7 @@ import lombok.*;
 import org.hibernate.annotations.*;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -59,4 +59,7 @@ public class ClearingRecord {
     @JdbcType(RecordAttributeJdbcType.class)
     private Map<String, Object> unmapped = new LinkedHashMap<>();
 
+    public static String partitionName(LocalDate date) {
+        return String.format("CLEARING_RECORD_Y%d_M%d_D%d", date.getYear(), date.getMonthValue(), date.getDayOfMonth());
+    }
 }

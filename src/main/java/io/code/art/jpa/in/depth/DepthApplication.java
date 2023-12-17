@@ -26,10 +26,6 @@ import java.util.Map;
 @SpringBootApplication
 @RequiredArgsConstructor
 public class DepthApplication implements ApplicationRunner {
-    private final ClearingRecordRepository clearingRecordRepository;
-    private final ApplicationContext applicationContext;
-    private final EntityManager entityManager;
-    private final EntityManagerFactory entityManagerFactory;
 
     public static void main(String[] args) {
         SpringApplication.run(DepthApplication.class, args);
@@ -72,28 +68,8 @@ public class DepthApplication implements ApplicationRunner {
 
 
 //        clearingRecordRepository.findAll(new ClearingRecordSearchSpecification());
-        clearingRecordRepository.saveAll(List.of(
-                ClearingRecord.builder().id(1L).postingDate(new Date()).transactionDate(new Date()).targetNumber("KL-846-25-198")
-                        .commentText("Comment to transaction")
-                        .unmapped(Map.of("POSTING_STATUS", "U", "SOURCE_FEE_AMOUNT", 1_000.0, "NW_REF_DATE", new Date()))
-                        .transAmount(100_000_500.0).build(),
-                ClearingRecord.builder().id(2L).postingDate(new Date()).transactionDate(new Date()).targetNumber("KL-846-25-198")
-                        .commentText("Comment to transaction")
-                        .unmapped(Map.of("POSTING_STATUS", "C", "SOURCE_FEE_AMOUNT", 1_500.0, "NW_REF_DATE", new Date()))
-                        .transAmount(1_500_500.0).build()
-        ));
-        var bt = new BasicTypeImpl<>(new RecordAttributeJavaType(), new RecordAttributeJdbcType());
-        var records = clearingRecordRepository.getRecordsByUnmappedContains(new TypedParameterValue<>(bt, Map.of("POSTING_STATUS", "U")));
-        log.info("DEPTH_APPLICATION_RECORDS: size {}", records.size());
+
     }
 
-    @SuppressWarnings("rawtypes")
-    private void customCall() {
-        var bt = new BasicTypeImpl<Map>(new RecordAttributeJavaType(), new RecordAttributeJdbcType());
-        var query = entityManager
-                .createQuery("SELECT dr FROM ClearingRecord dr WHERE jsonContains(dr.attributes, :attribute)", ClearingRecord.class)
-                .setParameter("attribute", new TypedParameterValue<>(bt, Map.of("key-1", 2)));
 
-        query.getResultList().forEach(value -> log.info("{}", value));
-    }
 }
