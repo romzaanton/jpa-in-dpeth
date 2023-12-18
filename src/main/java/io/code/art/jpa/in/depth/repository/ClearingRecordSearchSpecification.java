@@ -23,7 +23,8 @@ public class ClearingRecordSearchSpecification implements Specification<Clearing
     public Predicate toPredicate(Root<ClearingRecord> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
         if (criteriaBuilder instanceof SqmCriteriaNodeBuilder cb) {
-            var func1 = cb.<Boolean>sql("(? ->> 'key-1') = ?", Boolean.class, root.get(ClearingRecord_.UNMAPPED), cb.value("2"));
+            var func1 = cb.<Boolean>sql("(? ->> 'TRANS_CODE') = ?",
+                    Boolean.class, root.get(ClearingRecord_.UNMAPPED), cb.value("ADV"));
             predicates.add(cb.and(cb.isTrue(func1)));
             predicates.add(cb.equal(
                     new SqmSelfRenderingExpression<Expression<?>>(
