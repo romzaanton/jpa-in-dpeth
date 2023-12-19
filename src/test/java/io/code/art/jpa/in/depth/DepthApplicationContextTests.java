@@ -3,6 +3,8 @@ package io.code.art.jpa.in.depth;
 import com.github.javafaker.Faker;
 import io.code.art.jpa.in.depth.models.ClearingRecord;
 import io.code.art.jpa.in.depth.repository.ClearingRecordRepository;
+import io.code.art.jpa.in.depth.types.TSQueryValueFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
+@Slf4j
 @SpringBootTest(classes = DepthApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class DepthApplicationContextTests {
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres-ispell:0.0.1").asCompatibleSubstituteFor("postgres"));
@@ -65,6 +68,7 @@ class DepthApplicationContextTests {
                         .unmapped(Map.of("TRANS_COUNTRY", faker.country().name()))
                         .commentText(faker.lorem().fixedString(8096))
                         .postingDate(new Date())
+                        .searchText("Кот, Кошка, Кошечка, Коты, Котов, Рыба, Рыб, Кошачий, Кошкин")
                         .attributes(Map.of("TRANS_COUNTRY", faker.country().name()))
                         .build())
                 .collect(Collectors.toList());
@@ -72,4 +76,30 @@ class DepthApplicationContextTests {
         clearingRecordRepository.findAll()
                 .forEach(entity -> assertTrue(entities.stream().anyMatch(item -> item.getId().equals(entity.getId()))));
     }
+
+    @Test
+    void findValueByTSQuery_IfExists() {
+        var entitiesToSave = IntStream.range(0, 10)
+                .mapToObj(i -> ClearingRecord.builder()
+                        .id(faker.number().numberBetween(1L, 100L))
+                        .targetNumber(faker.numerify("###-####-##-########"))
+                        .transAmount(faker.number().randomDouble(2, 0, Integer.MAX_VALUE))
+                        .transactionDate(new Date())
+                        .transCurr("810")
+                        .unmapped(Map.of("TRANS_COUNTRY", faker.country().name()))
+                        .commentText(faker.lorem().fixedString(8096))
+                        .postingDate(new Date())
+                        .searchText("Кот, Кошка, Кошечка, Коты, Котов, Рыба, Рыб, Кошачий, Кошкин")
+                        .attributes(Map.of("TRANS_COUNTRY", faker.country().name()))
+                        .build())
+                .collect(Collectors.toList());
+        clearingRecordRepository.saveAll(entitiesToSave);
+        clearingRecordRepository.findAll().forEach(entity -> log.info("FIND_VALUE_BY_TS_QUERY_IF_EXISTS: ts_vector value {}", entity.getSearchText()));
+
+        var foundedEntities = clearingRecordRepository.queryValuesByTSQuery(TSQueryValueFactory.typedValue("Кот:*"));
+        log.info("FIND_VALUE_BY_TS_QUERY_IF_EXISTS: values count {}", foundedEntities.size());
+        assertEquals(foundedEntities.size(), entitiesToSave.size());
+    }
+
+
 }

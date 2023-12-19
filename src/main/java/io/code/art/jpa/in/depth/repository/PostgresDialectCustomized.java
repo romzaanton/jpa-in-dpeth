@@ -1,13 +1,19 @@
 package io.code.art.jpa.in.depth.repository;
 
+import io.code.art.jpa.in.depth.repository.function.descriptors.JsonSqmPathFunctionDescriptor;
+import io.code.art.jpa.in.depth.repository.function.descriptors.TSQueryFunctionDescriptor;
 import io.code.art.jpa.in.depth.types.RecordAttributeJavaType;
 import io.code.art.jpa.in.depth.types.RecordAttributeJdbcType;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
@@ -23,7 +29,8 @@ public class PostgresDialectCustomized extends PostgreSQLDialect {
         var typeConfiguration = functionContributions.getTypeConfiguration();
         functionContributions.getFunctionRegistry().registerPattern("jsonContains", "(?1::jsonb @> ?2::jsonb)",
                 basicTypeRegistry.resolve( StandardBasicTypes.BOOLEAN ));
-        functionContributions.getFunctionRegistry().register(
+        var functionRegister = functionContributions.getFunctionRegistry();
+        functionRegister.register(
                 "sqm_json_path",
                 new JsonSqmPathFunctionDescriptor(
                         "sqm_json_path",
@@ -32,6 +39,18 @@ public class PostgresDialectCustomized extends PostgreSQLDialect {
                                 typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN )
                         ),
                         new JsonSqmPathFunctionDescriptor.JsonSqmPathFunctionArgumentTypeResolver()
+                )
+        );
+
+        functionRegister.register(
+                TSQueryFunctionDescriptor.FUNCTION_KEY,
+                new TSQueryFunctionDescriptor(
+                        TSQueryFunctionDescriptor.FUNCTION_KEY,
+                        StandardArgumentsValidators.exactly(2),
+                        StandardFunctionReturnTypeResolvers.invariant(
+                                typeConfiguration.getBasicTypeRegistry().resolve(StandardBasicTypes.BOOLEAN)
+                        ),
+                        (function, argumentIndex, converter) -> converter.determineValueMapping(function)
                 )
         );
     }

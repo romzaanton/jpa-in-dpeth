@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.code.art.jpa.in.depth.types.RecordAttributeJavaType;
 import io.code.art.jpa.in.depth.types.RecordAttributeJdbcType;
+import io.code.art.jpa.in.depth.types.TSVectorJavaType;
+import io.code.art.jpa.in.depth.types.TSVectorJdbcType;
 import jakarta.persistence.Table;
 import jakarta.persistence.*;
 import lombok.*;
@@ -47,7 +49,13 @@ public class ClearingRecord {
     private String transCurr;
     @Column(columnDefinition = "numeric(20,2)", precision = 2)
     private Double transAmount;
+    @Column(columnDefinition = "text")
     private String commentText;
+
+    @JavaType(TSVectorJavaType.class)
+    @JdbcType(TSVectorJdbcType.class)
+    @Column(columnDefinition = "tsvector")
+    private String searchText;
 
     @JavaType(RecordAttributeJavaType.class)
     @JdbcType(RecordAttributeJdbcType.class)

@@ -1,4 +1,4 @@
-package io.code.art.jpa.in.depth.repository;
+package io.code.art.jpa.in.depth.repository.function.descriptors;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;

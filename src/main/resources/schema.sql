@@ -14,7 +14,8 @@ CREATE TABLE if not exists CLEARING_RECORD (
 	trans_amount numeric(20, 2) NOT NULL DEFAULT 0,
 	comment_text text NULL,
 	attributes jsonb NULL,
-	unmapped jsonb NULL
+	unmapped jsonb NULL,
+	search_text tsvector NULL
 ) PARTITION BY RANGE(transaction_date);
 
 CREATE INDEX IF NOT EXISTS  ID_CLEARING_RECORD_IDX ON CLEARING_RECORD USING btree (id);

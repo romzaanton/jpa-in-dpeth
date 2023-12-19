@@ -30,6 +30,9 @@ dependencies {
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	implementation("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")
+
+	testCompileOnly("org.projectlombok:lombok")
+	testAnnotationProcessor("org.projectlombok:lombok")
 	testImplementation("com.github.javafaker:javafaker:1.0.2") {
 		exclude(group= "org.yaml", module = "snakeyaml")
 	}
