@@ -31,24 +31,8 @@ public class AppConfig implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        createPartition();
         runInsert();
 
-    }
-
-    private void createPartition() {
-        var date = LocalDate.now();
-        jdbcTemplate.getJdbcOperations().execute(
-                String.format(
-                        """
-                                CREATE TABLE IF NOT EXISTS %s PARTITION OF CLEARING_RECORD
-                                    FOR VALUES FROM ('%s') TO ('%s');
-                                """,
-                        ClearingRecord.partitionName(date),
-                        date.atStartOfDay().toLocalDate().format(DateTimeFormatter.ISO_LOCAL_DATE),
-                        date.plusDays(1).atStartOfDay().toLocalDate().format(DateTimeFormatter.ISO_LOCAL_DATE)
-                )
-        );
     }
 
     private void runInsert() {

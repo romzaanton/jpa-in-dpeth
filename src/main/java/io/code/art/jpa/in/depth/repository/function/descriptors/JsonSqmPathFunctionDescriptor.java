@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class JsonSqmPathFunctionDescriptor extends AbstractSqmSelfRenderingFunctionDescriptor {
+    public static String FUNCTION_KEY = "compare_jsonb_right";
     public JsonSqmPathFunctionDescriptor(String name,
                                          ArgumentsValidator argumentsValidator,
                                          FunctionReturnTypeResolver returnTypeResolver,
