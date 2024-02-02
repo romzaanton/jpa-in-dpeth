@@ -30,7 +30,7 @@ public class JsonSqmPathFunctionDescriptor extends AbstractSqmSelfRenderingFunct
     }
 
     @Override
-    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, ReturnableType<?> returnType, SqlAstTranslator<?> walker) {
         walker.render(sqlAstArguments.get(0), SqlAstNodeRenderingMode.DEFAULT);
         sqlAppender.append(" @> ");
         walker.render(sqlAstArguments.get(1), SqlAstNodeRenderingMode.DEFAULT);

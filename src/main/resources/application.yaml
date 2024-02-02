@@ -3,7 +3,7 @@ spring:
     init:
       mode: always
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:32021/postgres}
+    url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:32011/jpa}
     username: ${DATABASE_USER:postgres}
     password: ${DATABASE_PASSWORD:password}
     initialization-mode:
@@ -12,8 +12,7 @@ spring:
       schema: ${DATABASE_SCHEMA:public}
   jpa:
     hibernate:
-      ddl-auto: none
-
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true

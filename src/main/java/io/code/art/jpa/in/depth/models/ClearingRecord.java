@@ -35,28 +35,36 @@ import java.util.Map;
 public class ClearingRecord {
     public static final String PARTITION_KEY = "transactionDate";
     @Id
+    @Column(name = "id")
     private Long id;
 
     @PartitionKey
     @Column(name = "transaction_date")
     @Temporal(TemporalType.TIMESTAMP)
     private Date transactionDate;
+
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "posting_date")
     private Date postingDate;
+    @Column(name = "target_number")
     private String targetNumber;
+    @Column(name = "trans_curr")
     private String transCurr;
-    @Column(columnDefinition = "numeric(20,2)", precision = 2)
+    @Column(columnDefinition = "numeric(20,2)", precision = 2, name = "trans_amount")
     private Double transAmount;
+    @Column(name = "comment_text")
     private String commentText;
 
     @JavaType(RecordAttributeJavaType.class)
     @JdbcType(RecordAttributeJdbcType.class)
+    @Column(name = "attributes")
     private Map<String, Serializable> attributes;
 
     @JsonAnyGetter
     @JsonAnySetter
     @JavaType(RecordAttributeJavaType.class)
     @JdbcType(RecordAttributeJdbcType.class)
+    @Column(name = "unmapped")
     private Map<String, Object> unmapped = new LinkedHashMap<>();
 
 }
