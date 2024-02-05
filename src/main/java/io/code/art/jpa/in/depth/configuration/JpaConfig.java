@@ -5,9 +5,13 @@ import io.code.art.jpa.in.depth.configuration.events.EventListenersIntegrators;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.CallbackException;
+import org.hibernate.Interceptor;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.SessionEventSettings;
 import org.hibernate.jpa.boot.spi.JpaSettings;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.type.Type;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,10 +52,16 @@ public class JpaConfig implements InitializingBean {
         factoryBean.setJpaVendorAdapter(vendorAdapter);
         factoryBean.setJpaPropertyMap(Map.of(
                         JdbcSettings.STATEMENT_INSPECTOR, (StatementInspector) (sql) -> {
-                            log.info("SQL: {}", sql);
+                            log.info("STATEMENT_INSPECTOR: {}", sql);
                             return sql;
                         },
-                        JpaSettings.INTEGRATOR_PROVIDER, new CustomIntegratorProvider()
+                        JpaSettings.INTEGRATOR_PROVIDER, new CustomIntegratorProvider(),
+                        SessionEventSettings.INTERCEPTOR, new Interceptor() {
+                            @Override
+                            public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) throws CallbackException {
+                                return Interceptor.super.onLoad(entity, id, state, propertyNames, types);
+                            }
+                        }
                 )
         );
 
@@ -64,4 +74,7 @@ public class JpaConfig implements InitializingBean {
         txManager.setEntityManagerFactory(entityManagerFactory);
         return txManager;
     }
+
 }
+
+

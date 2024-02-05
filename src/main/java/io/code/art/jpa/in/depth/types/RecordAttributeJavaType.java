@@ -59,6 +59,7 @@ public class RecordAttributeJavaType implements BasicJavaType<Map> {
     @Override
     @SuppressWarnings("unchecked")
     public <X> X unwrap(Map value, Class<X> type, WrapperOptions options) {
+
         return (X) createJSONBValue(value);
     }
 

@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.type.internal.BasicTypeImpl;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
@@ -21,7 +23,7 @@ import java.util.Map;
 @Component
 @SpringBootApplication
 @RequiredArgsConstructor
-public class DepthApplication {
+public class DepthApplication implements ApplicationRunner {
     private final ClearingRecordRepository clearingRecordRepository;
     private final ApplicationContext applicationContext;
     private final EntityManager entityManager;
@@ -29,6 +31,12 @@ public class DepthApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(DepthApplication.class, args);
+    }
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        log.info("Test call of repository {}", clearingRecordRepository.findAll().get(0).getId());
+        log.info("Test application comment for id 1: {}", clearingRecordRepository.findById(1L));
     }
 
     @SuppressWarnings("rawtypes")
