@@ -100,12 +100,12 @@ private static final TypeReference<Map<String, Serializable>> typeRef = new Type
 @Override
 @SuppressWarnings("unchecked")
 public <X> X unwrap(Map value, Class<X> type, WrapperOptions options) {
-	PGobject obj = new PGobject();
+    PGobject obj = new PGobject();
     obj.setType("jsonb");
     try {
-		obj.setValue(objectMapper.writeValueAsString(value));
+        obj.setValue(objectMapper.writeValueAsString(value));
     } catch (JsonProcessingException | SQLException e) {
-    	throw new RuntimeException(e);
+        throw new RuntimeException(e);
     }
     return obj;
 }
@@ -212,4 +212,71 @@ public class JsonSqmPathFunctionDescriptor extends AbstractSqmSelfRenderingFunct
 }
 ```
 
-In class below, we try to describe function that verify as to right side JSONB value include left side
+In class below, we try to describe function that verify as to right side JSONB value include left side.
+
+After function descirption was designed, let's register our function in dialect:
+
+```java
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.StandardBasicTypes;
+
+public class PostgresDialectCustomized extends PostgreSQLDialect {
+...
+    @Override
+    public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+        super.initializeFunctionRegistry(functionContributions);
+        BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
+        var typeConfiguration = functionContributions.getTypeConfiguration();
+      	...
+        functionContributions.getFunctionRegistry().register(
+                "sqm_json_path",
+                new JsonSqmPathFunctionDescriptor(
+                        "sqm_json_path",
+                        new JsonSqmPathFunctionDescriptor.JsonSqmPathArgumentsValidator(),
+                        StandardFunctionReturnTypeResolvers.invariant(
+                                typeConfiguration.getBasicTypeRegistry().resolve(StandardBasicTypes.BOOLEAN)
+                        ),
+                        new JsonSqmPathFunctionDescriptor.JsonSqmPathFunctionArgumentTypeResolver()
+                )
+        );
+    }
+...
+}
+```
+
+For Dialect  implementation, we will follow the easy way and defined it application properties file:
+
+```yaml
+spring:
+...
+  jpa:
+    properties:
+      hibernate:
+        dialect: io.code.art.jpa.in.depth.repository.PostgresDialectCustomized
+...
+```
+
+By way of illustration, let's use new function in Criteria API specification:
+
+```java
+public class ClearingRecordSearchSpecification implements Specification<ClearingRecord> {
+    @Override
+    public Predicate toPredicate(Root<ClearingRecord> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+        List<Predicate> predicates = new ArrayList<>();
+        if (criteriaBuilder instanceof SqmCriteriaNodeBuilder cb) {
+			...
+            predicates.add(
+                    cb.isTrue(
+                            cb.<Boolean>function("sqm_json_path", Boolean.class, new Expression[] {
+                                    root.get(ClearingRecord_.UNMAPPED), cb.literal("{\"key-1\": 3}")
+                            })
+                    )
+            );
+        }
+        return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+    }
+}
+```
