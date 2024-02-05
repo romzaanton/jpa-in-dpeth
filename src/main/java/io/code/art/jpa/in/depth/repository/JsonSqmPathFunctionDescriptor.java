@@ -14,14 +14,14 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 import java.util.function.Supplier;
 
 public class JsonSqmPathFunctionDescriptor extends AbstractSqmSelfRenderingFunctionDescriptor {
+    public static final String FUNCTION_NAME = "jsonContains";
+
     public JsonSqmPathFunctionDescriptor(String name,
                                          ArgumentsValidator argumentsValidator,
                                          FunctionReturnTypeResolver returnTypeResolver,
@@ -49,10 +49,6 @@ public class JsonSqmPathFunctionDescriptor extends AbstractSqmSelfRenderingFunct
     }
 
     public static class JsonSqmPathFunctionReturnTypeResolver implements FunctionReturnTypeResolver {
-        @Override
-        public ReturnableType<?> resolveFunctionReturnType(ReturnableType<?> impliedType, List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
-            return typeConfiguration.getBasicTypeRegistry().resolve(BooleanJavaType.class, SqlTypes.BOOLEAN);
-        }
 
         @Override
         public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
