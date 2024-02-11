@@ -28,3 +28,16 @@ CREATE TABLE IF NOT EXISTS CLEARING_RECORD_Y2023_M12_D14 PARTITION OF CLEARING_R
 
 insert into CLEARING_RECORD (id, transaction_date, posting_date, target_number, trans_curr, trans_amount, comment_text)
 values (1, '2023-12-13 00:00:00', '2023-12-13 00:00:00', '123', 'USD', 100.00, 'test');
+
+
+DROP TABLE IF EXISTS TRANSACTION_LOG CASCADE;
+
+CREATE TABLE IF NOT EXISTS TRANSACTION_LOG (
+    id uuid PRIMARY KEY default gen_random_uuid(),
+    "content" jsonb NOT NULL
+);
+
+
+insert into TRANSACTION_LOG values(gen_random_uuid(), '{"a": 10, "b": 10}');
+insert into TRANSACTION_LOG values(gen_random_uuid(), '{"a": 20, "b": 20}');
+insert into TRANSACTION_LOG values(gen_random_uuid(), '{"a": 30, "b": 30}');

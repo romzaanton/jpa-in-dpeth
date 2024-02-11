@@ -10,7 +10,6 @@ import lombok.*;
 import org.hibernate.annotations.*;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;

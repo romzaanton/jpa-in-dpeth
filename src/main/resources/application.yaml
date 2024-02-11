@@ -11,12 +11,15 @@ spring:
       pool-name: hc-pool-1
       schema: ${DATABASE_SCHEMA:public}
   jpa:
+    database-platform: org.hibernate.dialect.PostgresDialectCustomized
+    
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         format_sql: true
         dialect: io.code.art.jpa.in.depth.repository.PostgresDialectCustomized
+        dialect_resolvers: io.code.art.jpa.in.depth.repository.CustomDialectResolver
         jdbc:
           batch_size: 5
 

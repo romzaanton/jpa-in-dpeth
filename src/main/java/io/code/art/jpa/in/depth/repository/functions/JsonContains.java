@@ -1,4 +1,4 @@
-package io.code.art.jpa.in.depth.repository;
+package io.code.art.jpa.in.depth.repository.functions;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -19,13 +19,13 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class JsonSqmPathFunctionDescriptor extends AbstractSqmSelfRenderingFunctionDescriptor {
+public class JsonContains extends AbstractSqmSelfRenderingFunctionDescriptor {
     public static final String FUNCTION_NAME = "jsonContains";
 
-    public JsonSqmPathFunctionDescriptor(String name,
-                                         ArgumentsValidator argumentsValidator,
-                                         FunctionReturnTypeResolver returnTypeResolver,
-                                         FunctionArgumentTypeResolver argumentTypeResolver) {
+    public JsonContains(String name,
+                        ArgumentsValidator argumentsValidator,
+                        FunctionReturnTypeResolver returnTypeResolver,
+                        FunctionArgumentTypeResolver argumentTypeResolver) {
         super(name, argumentsValidator, returnTypeResolver, argumentTypeResolver);
     }
 

@@ -18,7 +18,7 @@ public interface ClearingRecordRepository extends JpaRepository<ClearingRecord, 
     List<ClearingRecord> getRecordsByAmountLessThen(@Param("amount") Double amount);
 
     @SuppressWarnings("rawtypes")
-    @Query(value = "SELECT cr FROM ClearingRecord cr WHERE sqm_json_path(cr.unmapped, :unmapped)", queryRewriter = ClearingRecordQueryRewriter.class)
+    @Query(value = "SELECT cr FROM ClearingRecord cr WHERE jsonContains(cr.unmapped, :unmapped)", queryRewriter = ClearingRecordQueryRewriter.class)
     List<ClearingRecord> getRecordsByUnmappedContains(
             @Param("unmapped") TypedParameterValue attribute
     );

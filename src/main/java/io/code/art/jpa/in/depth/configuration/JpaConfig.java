@@ -2,6 +2,7 @@ package io.code.art.jpa.in.depth.configuration;
 
 import io.code.art.jpa.in.depth.configuration.events.CustomIntegratorProvider;
 import io.code.art.jpa.in.depth.configuration.events.EventListenersIntegrators;
+import io.code.art.jpa.in.depth.repository.PostgresDialectCustomized;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +62,8 @@ public class JpaConfig implements InitializingBean {
                             public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) throws CallbackException {
                                 return Interceptor.super.onLoad(entity, id, state, propertyNames, types);
                             }
-                        }
+                        },
+                        JdbcSettings.DIALECT, PostgresDialectCustomized.class.getTypeName()
                 )
         );
 
