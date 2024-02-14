@@ -2,7 +2,6 @@ package io.code.art.jpa.in.depth.configuration;
 
 import io.code.art.jpa.in.depth.configuration.events.CustomIntegratorProvider;
 import io.code.art.jpa.in.depth.configuration.events.EventListenersIntegrators;
-import io.code.art.jpa.in.depth.repository.PostgresDialectCustomized;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

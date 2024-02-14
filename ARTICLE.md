@@ -255,7 +255,7 @@ spring:
   jpa:
     properties:
       hibernate:
-        dialect: io.code.art.jpa.in.depth.repository.PostgresDialectCustomized
+        dialect: io.code.art.jpa.in.depth.configuration.PostgresDialectCustomized
 ...
 ```
 

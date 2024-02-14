@@ -1,4 +1,4 @@
-package io.code.art.jpa.in.depth.repository;
+package io.code.art.jpa.in.depth.configuration;
 
 import io.code.art.jpa.in.depth.repository.functions.JsonContains;
 import io.code.art.jpa.in.depth.repository.functions.NumericValueJsonPath;
@@ -44,7 +44,7 @@ public class PostgresDialectCustomized extends PostgreSQLDialect {
                 io.code.art.jpa.in.depth.repository.functions.NumericValueJsonPath.FUNCTION_NAME,
                 new NumericValueJsonPath(
                         io.code.art.jpa.in.depth.repository.functions.NumericValueJsonPath.FUNCTION_NAME,
-                        StandardArgumentsValidators.min(1),
+                        new NumericValueJsonPath.NumericValueJsonPathArgumentsValidator(),
                         StandardFunctionReturnTypeResolvers.invariant(
                                 typeConfiguration.getBasicTypeRegistry().resolve(StandardBasicTypes.BOOLEAN)
                         ),
