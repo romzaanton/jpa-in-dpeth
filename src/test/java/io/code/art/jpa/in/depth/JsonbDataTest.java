@@ -98,6 +98,12 @@ class JsonbDataTest {
                         .build()
         ));
         Assertions.assertFalse(entities.isEmpty());
+
+        Assertions.assertDoesNotThrow(() -> {
+            transactionLogRepository.lookForTransactionContentWhereAmountGreater(20.0);
+        });
+
+        Assertions.assertFalse(transactionLogRepository.lookForTransactionContentWhereAmountGreater(1.0).isEmpty());
     }
 
 }
