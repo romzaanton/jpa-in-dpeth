@@ -21,6 +21,12 @@ JPA extension open to developers new approaches for handling such task as:
 * caching and versioning,
 * etc.
 
+What the aim at persistence layer design:
+
+* fail fast, preferable at compile time or up time,
+* single point of extension, that can be managed by one and used by many,
+* simple code construction, that will be debuggable and extensible
+
 ‍
 
 Where is points to start JPA extending?
@@ -70,6 +76,10 @@ Personally, during the most of design task for mapping system, it's crucial to t
 
 Let's assume, we need to utilize JSONB type, with absence to use external libraries or approaches from the box like `JdbcTypeCode`​ with value `SqlTypes.JSON`​.
 
+> ​`JdbcTypeCode`​ out the box solution, but this approach has it's own downsides:
+>
+> describe the error when your work in one module with JSONB through `JdbcTypeCode`​ and
+
 From PostgreSQL documentation we have JSONB representation as RFC7159 string and, same as we can get in Java code.
 
 Let's start with `JavaType`​:
@@ -100,12 +110,12 @@ private static final TypeReference<Map<String, Serializable>> typeRef = new Type
 @Override
 @SuppressWarnings("unchecked")
 public <X> X unwrap(Map value, Class<X> type, WrapperOptions options) {
-    PGobject obj = new PGobject();
+	PGobject obj = new PGobject();
     obj.setType("jsonb");
     try {
-        obj.setValue(objectMapper.writeValueAsString(value));
+		obj.setValue(objectMapper.writeValueAsString(value));
     } catch (JsonProcessingException | SQLException e) {
-        throw new RuntimeException(e);
+    	throw new RuntimeException(e);
     }
     return obj;
 }
@@ -183,24 +193,83 @@ PostgreSQL has a reach functionality for working with JSONB, but very few we hav
 For basic case, `FunctionRenderer`​ and `AbstractSqmSelfRenderingFunctionDescriptor`​ comes to the rescue, when we try to inject new function or operator:
 
 ```java
-public class JsonSqmPathFunctionDescriptor extends AbstractSqmSelfRenderingFunctionDescriptor {
-    public JsonSqmPathFunctionDescriptor(String name,
-                                         ArgumentsValidator argumentsValidator,
-                                         FunctionReturnTypeResolver returnTypeResolver,
-                                         FunctionArgumentTypeResolver argumentTypeResolver) {
+package io.code.art.jpa.in.depth.repository.functions;
+
+import org.hibernate.query.ReturnableType;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.type.spi.TypeConfiguration;
+
+import java.util.List;
+
+/**
+ * This method works with numeric values and jsonpath value
+ */
+public class NumericValueJsonPath extends AbstractSqmSelfRenderingFunctionDescriptor {
+    public static final String FUNCTION_NAME = "jsonpath_numeric_value_query";
+
+    public NumericValueJsonPath(String name, ArgumentsValidator argumentsValidator, FunctionReturnTypeResolver returnTypeResolver, FunctionArgumentTypeResolver argumentTypeResolver) {
         super(name, argumentsValidator, returnTypeResolver, argumentTypeResolver);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, ReturnableType<?> returnType, SqlAstTranslator<?> walker) {
-        walker.render(sqlAstArguments.get(0), SqlAstNodeRenderingMode.DEFAULT);
-        sqlAppender.append(" @> ");
-        walker.render(sqlAstArguments.get(1), SqlAstNodeRenderingMode.DEFAULT);
+        Expression column = (Expression) sqlAstArguments.get(0);
+        QueryLiteral<String> fieldLiteral = (QueryLiteral<String>) sqlAstArguments.get(1);
+        QueryLiteral<String> operatorLiteral = (QueryLiteral<String>) sqlAstArguments.get(2);
+        column.accept(walker);
+        sqlAppender.append(" @@ ");
+        if (sqlAstArguments.get(3) instanceof QueryLiteral) {
+            sqlAppender.append("'");
+            sqlAppender.append(fieldLiteral.getLiteralValue());
+            sqlAppender.append(operatorLiteral.getLiteralValue());
+            sqlAppender.append(((QueryLiteral<Double>) sqlAstArguments.get(3)).getLiteralValue().toString());
+            sqlAppender.append("'");
+        } else if (sqlAstArguments.get(3) instanceof SqmParameterInterpretation) {
+            sqlAppender.append(" CONCAT(");
+            sqlAppender.append("'");
+            sqlAppender.append(fieldLiteral.getLiteralValue());
+            sqlAppender.append("'");
+            sqlAppender.append(", ");
+            sqlAppender.append("'");
+            sqlAppender.append(operatorLiteral.getLiteralValue());
+            sqlAppender.append("'");
+            sqlAppender.append(", ");
+            sqlAstArguments.get(3).accept(walker);
+            sqlAppender.append(")::jsonpath");
+        }
     }
 
-    public static class JsonSqmPathArgumentsValidator implements ArgumentsValidator {
+    public static class NumericValueJsonPathArgumentsValidator implements ArgumentsValidator {
         @Override
         public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, TypeConfiguration typeConfiguration) {
+            if (arguments.size() != 4) {
+                throw new FunctionArgumentException(
+                        String.format("%s function expect exactly 4 arguments", FUNCTION_NAME)
+                );
+            }
+            if (!(arguments.get(0) instanceof SqmPath)) {
+                throw new FunctionArgumentException(
+                        String.format("%s function first arguments have to be sqm path", FUNCTION_NAME)
+                );
+            }
+            if (arguments.subList(1, arguments.size()).stream().allMatch(arg -> arg instanceof QueryLiteral)) {
+                throw new FunctionArgumentException(
+                        String.format("%s function arguments from 2 to 4 have to be literals value", FUNCTION_NAME)
+                );
+            }
             ArgumentsValidator.super.validate(arguments, functionName, typeConfiguration);
         }
 
@@ -209,6 +278,7 @@ public class JsonSqmPathFunctionDescriptor extends AbstractSqmSelfRenderingFunct
             ArgumentsValidator.super.validateSqlTypes(arguments, functionName);
         }
     }
+
 }
 ```
 
@@ -217,12 +287,6 @@ In class below, we try to describe function that verify as to right side JSONB v
 After function descirption was designed, let's register our function in dialect:
 
 ```java
-import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.StandardBasicTypes;
-
 public class PostgresDialectCustomized extends PostgreSQLDialect {
 ...
     @Override
@@ -230,16 +294,16 @@ public class PostgresDialectCustomized extends PostgreSQLDialect {
         super.initializeFunctionRegistry(functionContributions);
         BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
         var typeConfiguration = functionContributions.getTypeConfiguration();
-      	...
-        functionContributions.getFunctionRegistry().register(
-                "sqm_json_path",
-                new JsonSqmPathFunctionDescriptor(
-                        "sqm_json_path",
-                        new JsonSqmPathFunctionDescriptor.JsonSqmPathArgumentsValidator(),
+        var functionRegistry = functionContributions.getFunctionRegistry();
+        functionRegistry.register(
+                io.code.art.jpa.in.depth.repository.functions.NumericValueJsonPath.FUNCTION_NAME,
+                new NumericValueJsonPath(
+                        io.code.art.jpa.in.depth.repository.functions.NumericValueJsonPath.FUNCTION_NAME,
+                        new NumericValueJsonPath.NumericValueJsonPathArgumentsValidator(),
                         StandardFunctionReturnTypeResolvers.invariant(
                                 typeConfiguration.getBasicTypeRegistry().resolve(StandardBasicTypes.BOOLEAN)
                         ),
-                        new JsonSqmPathFunctionDescriptor.JsonSqmPathFunctionArgumentTypeResolver()
+                        (function, argumentIndex, converter) -> converter.determineValueMapping(function)
                 )
         );
     }
@@ -255,28 +319,114 @@ spring:
   jpa:
     properties:
       hibernate:
-        dialect: io.code.art.jpa.in.depth.configuration.PostgresDialectCustomized
+        dialect: io.code.art.jpa.in.depth.repository.PostgresDialectCustomized
 ...
 ```
 
-By way of illustration, let's use new function in Criteria API specification:
+or in java configuration class you can customize bean:
 
 ```java
-public class ClearingRecordSearchSpecification implements Specification<ClearingRecord> {
+@Bean
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+        vendorAdapter.setGenerateDdl(true);
+
+        LocalContainerEntityManagerFactoryBean factoryBean = new LocalContainerEntityManagerFactoryBean();
+        factoryBean.setDataSource(dataSource);
+        factoryBean.setPackagesToScan("io.code.art.jpa.in.depth");
+        factoryBean.setJpaVendorAdapter(vendorAdapter);
+        factoryBean.setJpaPropertyMap(Map.of(
+                        JdbcSettings.DIALECT, PostgresDialectCustomized.class.getTypeName()
+                )
+        );
+
+        return factoryBean;
+    }
+```
+
+As the way to illustrate, let's use new function in Criteria API specification:
+
+```java
+@AllArgsConstructor
+public class TransactionLogSpecification implements Specification<TransactionLog> {
+    private final TransactionContentQueryParams queryParams;
+
     @Override
-    public Predicate toPredicate(Root<ClearingRecord> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+    public Predicate toPredicate(Root<TransactionLog> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
         if (criteriaBuilder instanceof SqmCriteriaNodeBuilder cb) {
-			...
-            predicates.add(
-                    cb.isTrue(
-                            cb.<Boolean>function("sqm_json_path", Boolean.class, new Expression[] {
-                                    root.get(ClearingRecord_.UNMAPPED), cb.literal("{\"key-1\": 3}")
-                            })
-                    )
-            );
+            if (queryParams.getTransAmountFrom() != null) {
+                var func1 = cb.function(
+                        FUNCTION_NAME,
+                        Boolean.class,
+                        new Expression[]{
+                                root.get(TransactionLog_.CONTENT),
+                                cb.literal("$.transAmount"),
+                                cb.literal(">"),
+                                cb.literal(queryParams.getTransAmountFrom()),
+                        }
+                );
+                predicates.add(cb.and(cb.isTrue(func1)));
+            }
+
+            if (queryParams.getTransAmountTo() != null) {
+                var func1 = cb.function(
+                        FUNCTION_NAME,
+                        Boolean.class,
+                        new Expression[]{
+                                root.get(TransactionLog_.CONTENT),
+                                cb.literal("$.transAmount"),
+                                cb.literal("<"),
+                                cb.literal(queryParams.getTransAmountFrom())
+                        }
+                );
+                predicates.add(cb.and(cb.isTrue(func1)));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
         }
-        return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        return criteriaBuilder.and();
     }
 }
 ```
+
+In JPA query, for working with JSON path we have to implement a negligible stunt:
+
+```java
+/// Code for JPA repoistory
+public interface TransactionLogRepository extends JpaRepository<TransactionLog, UUID>, JpaSpecificationExecutor<TransactionLog> {
+    @Query("FROM TransactionLog tl WHERE jsonpath_numeric_value_query(tl.content, '$.transAmount', '>', ?#{#amount.toString()})")
+    List<TransactionLog> lookForTransactionContentWhereAmountGreater(Double amount);
+}
+
+...
+// Code for function descriptor
+
+public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, ReturnableType<?> returnType, SqlAstTranslator<?> walker) {
+        Expression column = (Expression) sqlAstArguments.get(0);
+        QueryLiteral<String> fieldLiteral = (QueryLiteral<String>) sqlAstArguments.get(1);
+        QueryLiteral<String> operatorLiteral = (QueryLiteral<String>) sqlAstArguments.get(2);
+        column.accept(walker);
+        sqlAppender.append(" @@ ");
+        ....
+		if (sqlAstArguments.get(3) instanceof SqmParameterInterpretation) {
+            sqlAppender.append(" CONCAT(");
+            sqlAppender.append("'");
+            sqlAppender.append(fieldLiteral.getLiteralValue());
+            sqlAppender.append("'");
+            sqlAppender.append(", ");
+            sqlAppender.append("'");
+            sqlAppender.append(operatorLiteral.getLiteralValue());
+            sqlAppender.append("'");
+            sqlAppender.append(", ");
+            sqlAstArguments.get(3).accept(walker);
+            sqlAppender.append(")::jsonpath");
+        }
+ }
+```
+
+That is attribute to the fact that we can use `QueryLiteral`​ in JPQL for parameters pass and, in most cases, argument of class `SqmParameterInterpretation`​ receives in `List<? extends SqlAstNode> sqlAstArguments`​ the list.
+
+‍
+
+[Github repository. TL.DR](https://github.com/romzaanton/jpa-in-dpeth/tree/main "Github repository. TL.DR")
