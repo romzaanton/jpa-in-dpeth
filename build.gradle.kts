@@ -41,8 +41,19 @@ dependencies {
 	annotationProcessor("org.hibernate:hibernate-jpamodelgen:6.1.7.Final")
 	implementation("org.postgresql:postgresql")
 
-
+	testImplementation("org.testcontainers:testcontainers:1.19.4")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.testcontainers:postgresql:1.19.4")
+	testImplementation("org.testcontainers:junit-jupiter:1.19.4")
+
+	testImplementation("com.github.javafaker:javafaker:1.0.2") {
+		exclude(group = "org.yaml", module = "snakeyaml")
+	}
+	testImplementation("org.yaml:snakeyaml:2.2")
+
+	testCompileOnly("org.projectlombok:lombok")
+	testAnnotationProcessor("org.projectlombok:lombok")
+
 }
 
 tasks.withType<Test> {

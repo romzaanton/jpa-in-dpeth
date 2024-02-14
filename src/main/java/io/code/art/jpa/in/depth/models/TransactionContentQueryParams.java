@@ -16,7 +16,8 @@ import java.util.List;
 public class TransactionContentQueryParams implements Serializable {
     private List<Date> transactionDate;
     private List<Date> postingDate;
-    private List<String> targetNumber;
+    private List<String> targetNumbers;
+    private String targetNumber;
     private List<String> transCurr;
     private Double transAmountFrom;
     private Double transAmountTo;

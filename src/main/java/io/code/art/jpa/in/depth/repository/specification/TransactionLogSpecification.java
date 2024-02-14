@@ -29,12 +29,26 @@ public class TransactionLogSpecification implements Specification<TransactionLog
                                 root.get(TransactionLog_.CONTENT),
                                 cb.literal("$.transAmount"),
                                 cb.literal(">"),
+                                cb.literal(queryParams.getTransAmountFrom()),
+                        }
+                );
+                predicates.add(cb.and(cb.isTrue(func1)));
+            }
+
+            if (queryParams.getTransAmountTo() != null) {
+                var func1 = cb.function(
+                        FUNCTION_NAME,
+                        Boolean.class,
+                        new Expression[]{
+                                root.get(TransactionLog_.CONTENT),
+                                cb.literal("$.transAmount"),
+                                cb.literal("<"),
                                 cb.literal(queryParams.getTransAmountFrom())
                         }
                 );
-
                 predicates.add(cb.and(cb.isTrue(func1)));
             }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         }
         return criteriaBuilder.and();

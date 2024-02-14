@@ -23,7 +23,7 @@ import java.util.Map;
 @Component
 @SpringBootApplication
 @RequiredArgsConstructor
-public class DepthApplication implements ApplicationRunner {
+public class DepthApplication {
     private final ClearingRecordRepository clearingRecordRepository;
     private final ApplicationContext applicationContext;
     private final EntityManager entityManager;
@@ -31,12 +31,6 @@ public class DepthApplication implements ApplicationRunner {
 
     public static void main(String[] args) {
         SpringApplication.run(DepthApplication.class, args);
-    }
-
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-        log.info("Test call of repository {}", clearingRecordRepository.findAll().get(0).getId());
-        log.info("Test application comment for id 1: {}", clearingRecordRepository.findById(1L));
     }
 
     @SuppressWarnings("rawtypes")

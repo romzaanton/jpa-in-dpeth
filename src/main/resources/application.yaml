@@ -6,13 +6,11 @@ spring:
     url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:32011/jpa}
     username: ${DATABASE_USER:postgres}
     password: ${DATABASE_PASSWORD:password}
-    initialization-mode:
     hikari:
       pool-name: hc-pool-1
       schema: ${DATABASE_SCHEMA:public}
   jpa:
     database-platform: org.hibernate.dialect.PostgresDialectCustomized
-    
     hibernate:
       ddl-auto: update
     properties:
