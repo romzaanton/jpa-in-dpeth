@@ -41,3 +41,14 @@ CREATE TABLE IF NOT EXISTS TRANSACTION_LOG (
 insert into TRANSACTION_LOG values(gen_random_uuid(), '{"a": 10, "b": 10}');
 insert into TRANSACTION_LOG values(gen_random_uuid(), '{"a": 20, "b": 20}');
 insert into TRANSACTION_LOG values(gen_random_uuid(), '{"a": 30, "b": 30}');
+
+
+CREATE TABLE if not exists TRANSACTION_RECORD (
+	id int8 PRIMARY KEY,
+	transaction_date timestamp NOT NULL,
+	posting_date timestamp NOT NULL,
+	target_number varchar(255) NULL,
+	trans_curr varchar(3) NULL,
+	trans_amount numeric(20, 2) NOT NULL DEFAULT 0,
+	comment_text text NULL
+);

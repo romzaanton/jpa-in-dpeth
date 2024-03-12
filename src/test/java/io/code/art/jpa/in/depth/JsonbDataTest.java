@@ -4,29 +4,32 @@ import com.github.javafaker.Faker;
 import io.code.art.jpa.in.depth.models.TransactionContent;
 import io.code.art.jpa.in.depth.models.TransactionContentQueryParams;
 import io.code.art.jpa.in.depth.models.TransactionLog;
+import io.code.art.jpa.in.depth.models.TransactionRecord;
 import io.code.art.jpa.in.depth.repository.TransactionLogRepository;
+import io.code.art.jpa.in.depth.repository.TransactionRecordConcurrentRepository;
+import io.code.art.jpa.in.depth.repository.TransactionRecordRepository;
 import io.code.art.jpa.in.depth.repository.specification.TransactionLogSpecification;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 @Slf4j
-@ExtendWith(SpringExtension.class)
-@DataJpaTest
+@SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class JsonbDataTest {
@@ -46,6 +49,10 @@ class JsonbDataTest {
 
     @Autowired
     public TransactionLogRepository transactionLogRepository;
+    @Autowired
+    public TransactionRecordRepository transactionRecordRepository;
+    @Autowired
+    public TransactionRecordConcurrentRepository transactionRecordConcurrentRepository;
 
     @DynamicPropertySource
     public static void setProperties(DynamicPropertyRegistry registry) {
@@ -53,6 +60,8 @@ class JsonbDataTest {
         registry.add("spring.datasource.username", () -> postgreSQLContainer.getUsername());
         registry.add("spring.datasource.password", () -> postgreSQLContainer.getPassword());
         registry.add("spring.datasource.password", () -> postgreSQLContainer.getPassword());
+        registry.add("spring.jpa.show-sql", () -> "true");
+        registry.add("spring.jpa.properties.hibernate.format_sql", () -> "true");
     }
 
     public List<TransactionLog> saveSampleItems(int count) {
@@ -100,6 +109,49 @@ class JsonbDataTest {
         });
 
         Assertions.assertFalse(transactionLogRepository.lookForTransactionContentWhereAmountGreater(1.0).isEmpty());
+    }
+
+
+    @Test
+    @DisplayName("Transaction lock normalization")
+    public void ifJpaLock_thenAwait() {
+        long idsCount = 1000L;
+        List<Long> ids = LongStream.range(0, idsCount)
+                .boxed()
+                .map(i -> faker.number().numberBetween(1, 1000L))
+                .toList();
+
+        var executors = Executors.newFixedThreadPool(10);
+        Runnable runnable = () -> {
+            var records = LongStream.range(0, idsCount).boxed()
+                    .map(i -> TransactionRecord.builder()
+                            .id(i)
+                            .commentText(faker.lorem().paragraph(10))
+                            .postingDate(faker.date().past(2, TimeUnit.DAYS))
+                            .targetNumber(faker.business().creditCardNumber())
+                            .transactionDate(faker.date().past(2, TimeUnit.DAYS))
+                            .transCurr(faker.country().currencyCode())
+                            .transAmount(faker.number().randomDouble(2, 0, 10_000_000))
+                            .build()
+                    ).toList();
+            transactionRecordConcurrentRepository.upsert(records);
+        };
+
+        Assertions.assertDoesNotThrow(() -> {
+            CompletableFuture.allOf(
+                    CompletableFuture.runAsync(runnable, executors),
+                    CompletableFuture.runAsync(runnable, executors),
+                    CompletableFuture.runAsync(runnable, executors),
+                    CompletableFuture.runAsync(runnable, executors),
+                    CompletableFuture.runAsync(runnable, executors),
+                    CompletableFuture.runAsync(runnable, executors),
+                    CompletableFuture.runAsync(runnable, executors),
+                    CompletableFuture.runAsync(runnable, executors),
+                    CompletableFuture.runAsync(runnable, executors)
+            ).get();
+        });
+
+        transactionRecordRepository.findAll().forEach(record -> log.info("{}", record));
     }
 
 }

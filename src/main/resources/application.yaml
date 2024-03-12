@@ -18,8 +18,6 @@ spring:
         format_sql: true
         dialect: io.code.art.jpa.in.depth.configuration.PostgresDialectCustomized
         dialect_resolvers: io.code.art.jpa.in.depth.configuration.CustomDialectResolver
-        jdbc:
-          batch_size: 5
 
 management:
   endpoints:
@@ -40,4 +38,4 @@ logging:
   level:
     root: INFO
     org:
-      hibernate: TRACE
+      hibernate: INFO
