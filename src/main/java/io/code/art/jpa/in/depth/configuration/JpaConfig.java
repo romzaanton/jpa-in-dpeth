@@ -52,7 +52,7 @@ public class JpaConfig implements InitializingBean {
         factoryBean.setJpaVendorAdapter(vendorAdapter);
         factoryBean.setJpaPropertyMap(Map.of(
                         JdbcSettings.STATEMENT_INSPECTOR, (StatementInspector) (sql) -> {
-                            log.info("STATEMENT_INSPECTOR: {}", sql);
+                            log.debug("STATEMENT_INSPECTOR: {}", sql);
                             return sql;
                         },
                         JpaSettings.INTEGRATOR_PROVIDER, new CustomIntegratorProvider(),

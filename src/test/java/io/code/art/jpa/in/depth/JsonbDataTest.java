@@ -60,8 +60,8 @@ class JsonbDataTest {
         registry.add("spring.datasource.username", () -> postgreSQLContainer.getUsername());
         registry.add("spring.datasource.password", () -> postgreSQLContainer.getPassword());
         registry.add("spring.datasource.password", () -> postgreSQLContainer.getPassword());
-        registry.add("spring.jpa.show-sql", () -> "true");
-        registry.add("spring.jpa.properties.hibernate.format_sql", () -> "true");
+        registry.add("spring.jpa.show-sql", () -> "false");
+        registry.add("spring.jpa.properties.hibernate.format_sql", () -> "false");
     }
 
     public List<TransactionLog> saveSampleItems(int count) {
@@ -122,7 +122,7 @@ class JsonbDataTest {
                 .toList();
 
         var executors = Executors.newFixedThreadPool(10);
-        Runnable runnable = () -> {
+        Runnable runnableConcurrent = () -> {
             var records = LongStream.range(0, idsCount).boxed()
                     .map(i -> TransactionRecord.builder()
                             .id(i)
@@ -135,23 +135,47 @@ class JsonbDataTest {
                             .build()
                     ).toList();
             transactionRecordConcurrentRepository.upsert(records);
+
+        };
+
+        Runnable runnableSync = () -> {
+            var records = LongStream.range(0, idsCount).boxed()
+                    .map(i -> TransactionRecord.builder()
+                            .id(i)
+                            .commentText(faker.bothify("trn. ??-###-??-######"))
+                            .postingDate(faker.date().past(2, TimeUnit.DAYS))
+                            .targetNumber(faker.business().creditCardNumber())
+                            .transactionDate(faker.date().past(2, TimeUnit.DAYS))
+                            .transCurr(faker.country().currencyCode())
+                            .transAmount(faker.number().randomDouble(2, 0, 10_000_000))
+                            .build()
+                    ).toList();
+            transactionRecordConcurrentRepository.upsertNoLock(records);
         };
 
         Assertions.assertDoesNotThrow(() -> {
             CompletableFuture.allOf(
-                    CompletableFuture.runAsync(runnable, executors),
-                    CompletableFuture.runAsync(runnable, executors),
-                    CompletableFuture.runAsync(runnable, executors),
-                    CompletableFuture.runAsync(runnable, executors),
-                    CompletableFuture.runAsync(runnable, executors),
-                    CompletableFuture.runAsync(runnable, executors),
-                    CompletableFuture.runAsync(runnable, executors),
-                    CompletableFuture.runAsync(runnable, executors),
-                    CompletableFuture.runAsync(runnable, executors)
+                    CompletableFuture.runAsync(runnableConcurrent, executors),
+                    CompletableFuture.runAsync(runnableSync, executors),
+                    CompletableFuture.runAsync(runnableConcurrent, executors),
+                    CompletableFuture.runAsync(runnableSync, executors),
+                    CompletableFuture.runAsync(runnableConcurrent, executors),
+                    CompletableFuture.runAsync(runnableConcurrent, executors),
+                    CompletableFuture.runAsync(runnableSync, executors),
+                    CompletableFuture.runAsync(runnableConcurrent, executors),
+                    CompletableFuture.runAsync(runnableConcurrent, executors),
+                    CompletableFuture.runAsync(runnableConcurrent, executors),
+                    CompletableFuture.runAsync(runnableSync, executors),
+                    CompletableFuture.runAsync(runnableConcurrent, executors),
+                    CompletableFuture.runAsync(runnableSync, executors),
+                    CompletableFuture.runAsync(runnableConcurrent, executors),
+                    CompletableFuture.runAsync(runnableSync, executors),
+                    CompletableFuture.runAsync(runnableConcurrent, executors),
+                    CompletableFuture.runAsync(runnableSync, executors)
             ).get();
         });
 
-        transactionRecordRepository.findAll().forEach(record -> log.info("{}", record));
+       log.info("Total count saved {}",  transactionRecordRepository.findAll().size());
     }
 
 }
