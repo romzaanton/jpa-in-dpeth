@@ -11,6 +11,7 @@ spring:
       schema: ${DATABASE_SCHEMA:public}
   jpa:
     database-platform: org.hibernate.dialect.PostgresDialectCustomized
+    show-sql: true
     hibernate:
       ddl-auto: update
     properties:
@@ -38,4 +39,5 @@ logging:
   level:
     root: INFO
     org:
-      hibernate: INFO
+      hibernate:
+        SQL: INFO

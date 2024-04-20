@@ -10,6 +10,7 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -29,14 +30,14 @@ public class TransactionRecordConcurrentRepository {
     }
 
     @Retryable(maxAttempts = 5)
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRES_NEW)
     public void upsert(List<TransactionRecord> records) {
         jdbcTemplate.execute("LOCK TABLE " + tableNameFromEntity(TransactionRecord.class) + " IN EXCLUSIVE MODE");
         transactionRecordRepository.saveAllAndFlush(records);
     }
 
     @Retryable(maxAttempts = 5)
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRES_NEW)
     public void upsertNoLock(List<TransactionRecord> records) {
         transactionRecordRepository.saveAllAndFlush(records);
     }

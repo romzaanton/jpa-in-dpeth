@@ -11,6 +11,8 @@ import io.code.art.jpa.in.depth.repository.TransactionRecordRepository;
 import io.code.art.jpa.in.depth.repository.specification.TransactionLogSpecification;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +21,8 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 @Slf4j
 @SpringBootTest
@@ -112,16 +117,13 @@ class JsonbDataTest {
     }
 
 
-    @Test
+    @ParameterizedTest
+    @ValueSource(longs = {10, 5})
     @DisplayName("Transaction lock normalization")
-    public void ifJpaLock_thenAwait() {
+    public void ifJpaLock_thenAwait(Long count) {
         long idsCount = 1000L;
-        List<Long> ids = LongStream.range(0, idsCount)
-                .boxed()
-                .map(i -> faker.number().numberBetween(1, 1000L))
-                .toList();
 
-        var executors = Executors.newFixedThreadPool(10);
+        var executors = Executors.newFixedThreadPool(1);
         Runnable runnableConcurrent = () -> {
             var records = LongStream.range(0, idsCount).boxed()
                     .map(i -> TransactionRecord.builder()
@@ -153,26 +155,22 @@ class JsonbDataTest {
             transactionRecordConcurrentRepository.upsertNoLock(records);
         };
 
+        Runnable runnableRead = () -> {
+            var records = transactionRecordRepository.findAll();
+            log.info("find records with transaction amount < 1 == {}", records.stream().filter(tr -> tr.getTransAmount() < 1).count());
+        };
+
         Assertions.assertDoesNotThrow(() -> {
-            CompletableFuture.allOf(
-                    CompletableFuture.runAsync(runnableConcurrent, executors),
-                    CompletableFuture.runAsync(runnableSync, executors),
-                    CompletableFuture.runAsync(runnableConcurrent, executors),
-                    CompletableFuture.runAsync(runnableSync, executors),
-                    CompletableFuture.runAsync(runnableConcurrent, executors),
-                    CompletableFuture.runAsync(runnableConcurrent, executors),
-                    CompletableFuture.runAsync(runnableSync, executors),
-                    CompletableFuture.runAsync(runnableConcurrent, executors),
-                    CompletableFuture.runAsync(runnableConcurrent, executors),
-                    CompletableFuture.runAsync(runnableConcurrent, executors),
-                    CompletableFuture.runAsync(runnableSync, executors),
-                    CompletableFuture.runAsync(runnableConcurrent, executors),
-                    CompletableFuture.runAsync(runnableSync, executors),
-                    CompletableFuture.runAsync(runnableConcurrent, executors),
-                    CompletableFuture.runAsync(runnableSync, executors),
-                    CompletableFuture.runAsync(runnableConcurrent, executors),
-                    CompletableFuture.runAsync(runnableSync, executors)
-            ).get();
+            var runnableList = LongStream.rangeClosed(0, count).boxed().flatMap(_i -> Stream.of(runnableConcurrent, runnableSync, runnableRead))
+                    .collect(Collectors.toList());
+            Collections.shuffle(runnableList);
+
+            var futureList = new ArrayList<CompletableFuture<?>>();
+            for (var runnable : runnableList) {
+                futureList.add( CompletableFuture.runAsync(runnable, executors));
+            }
+            CompletableFuture.allOf(futureList.toArray(new CompletableFuture[0])).get();
+
         });
 
        log.info("Total count saved {}",  transactionRecordRepository.findAll().size());
