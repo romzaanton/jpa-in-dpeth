@@ -26,3 +26,8 @@ CREATE TABLE if not exists TRANSACTION_RECORD (
 	trans_amount numeric(20, 2) NOT NULL DEFAULT 0,
 	comment_text text NULL
 );
+
+CREATE TABLE IF NOT EXISTS TRANSACTION_LOG (
+    id uuid PRIMARY KEY default gen_random_uuid(),
+    "content" jsonb NOT NULL
+);

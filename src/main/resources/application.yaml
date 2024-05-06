@@ -40,4 +40,11 @@ logging:
     root: INFO
     org:
       hibernate:
-        SQL: INFO
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+        orm:
+          jdbc:
+            bind: TRACE

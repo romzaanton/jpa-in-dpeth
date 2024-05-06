@@ -65,8 +65,8 @@ class JsonbDataTest {
         registry.add("spring.datasource.username", () -> postgreSQLContainer.getUsername());
         registry.add("spring.datasource.password", () -> postgreSQLContainer.getPassword());
         registry.add("spring.datasource.password", () -> postgreSQLContainer.getPassword());
-        registry.add("spring.jpa.show-sql", () -> "false");
-        registry.add("spring.jpa.properties.hibernate.format_sql", () -> "false");
+        registry.add("spring.jpa.show-sql", () -> "true");
+        registry.add("spring.jpa.properties.hibernate.format_sql", () -> "true");
     }
 
     public List<TransactionLog> saveSampleItems(int count) {
