@@ -84,11 +84,11 @@ public class TSQueryTest {
                     .transAmount(faker.number().randomDouble(2, 0, 1_000_000))
                     .commentText("Что-то важное и не очень")
                     .build();
-            clearingRecordRepository.save(clearingRecord);
+            clearingRecordRepository.saveAndFlush(clearingRecord);
         });
 
         Assertions.assertNotEquals(
-                clearingRecordRepository.getValuesByTSQuery("что").size(), 0
+                clearingRecordRepository.getValuesByTSQuery("важный").size(), 0
         );
     }
 }

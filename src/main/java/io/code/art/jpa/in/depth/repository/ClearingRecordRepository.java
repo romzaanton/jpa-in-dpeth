@@ -23,6 +23,6 @@ public interface ClearingRecordRepository extends JpaRepository<ClearingRecord, 
             @Param("unmapped") TypedParameterValue attribute
     );
 
-    @Query(value = "SELECT cr FROM ClearingRecord cr WHERE find_by_tsquery(cr.commentText, :query)")
+    @Query(value = "SELECT cr FROM ClearingRecord cr WHERE find_by_tsquery(cr.searchVector, :query)")
     List<ClearingRecord> getValuesByTSQuery(@Param("query") String query);
 }

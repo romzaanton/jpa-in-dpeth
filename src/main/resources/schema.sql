@@ -12,9 +12,10 @@ CREATE TABLE if not exists CLEARING_RECORD (
 	target_number varchar(255) NULL,
 	trans_curr varchar(3) NULL,
 	trans_amount numeric(20, 2) NOT NULL DEFAULT 0,
-	comment_text text NULL,
+	comment_text text,
 	attributes jsonb NULL,
-	unmapped jsonb NULL
+	unmapped jsonb NULL,
+	search_vector tsvector GENERATED ALWAYS AS (to_tsvector('russian', comment_text)) STORED
 ) PARTITION BY RANGE(transaction_date);
 
 CREATE INDEX IF NOT EXISTS  ID_CLEARING_RECORD_IDX ON CLEARING_RECORD USING btree (id);

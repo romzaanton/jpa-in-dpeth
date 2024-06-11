@@ -5,6 +5,7 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -26,6 +27,12 @@ public class TSQueryFunctionDescriptor extends AbstractSqmSelfRenderingFunctionD
     public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, ReturnableType<?> returnType, SqlAstTranslator<?> walker) {
         walker.render(sqlAstArguments.get(0), SqlAstNodeRenderingMode.DEFAULT);
         sqlAppender.append(" @@ ");
-        walker.render(sqlAstArguments.get(1), SqlAstNodeRenderingMode.DEFAULT);
+        sqlAppender.append(" to_tsquery('russian', ");
+        if (sqlAstArguments.get(1) instanceof SqmParameterInterpretation sqmParam) {
+            sqmParam.accept(walker);
+        } else {
+            walker.render(sqlAstArguments.get(1), SqlAstNodeRenderingMode.DEFAULT);
+        }
+        sqlAppender.append(")");
     }
 }

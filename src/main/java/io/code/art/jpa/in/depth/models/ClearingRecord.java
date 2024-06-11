@@ -8,6 +8,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.*;
+import org.hibernate.annotations.Generated;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -53,6 +54,9 @@ public class ClearingRecord {
     private Double transAmount;
     @Column(name = "comment_text")
     private String commentText;
+    @GeneratedColumn("to_tsvector('russian', comment_text || '')")
+    @Column(name = "search_vector")
+    private String searchVector;
 
     @JavaType(RecordAttributeJavaType.class)
     @JdbcType(RecordAttributeJdbcType.class)
