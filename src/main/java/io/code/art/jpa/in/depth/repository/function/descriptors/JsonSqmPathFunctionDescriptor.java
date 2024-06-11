@@ -30,8 +30,9 @@ public class JsonSqmPathFunctionDescriptor extends AbstractSqmSelfRenderingFunct
         super(name, argumentsValidator, returnTypeResolver, argumentTypeResolver);
     }
 
+
     @Override
-    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, ReturnableType<?> returnType, SqlAstTranslator<?> walker) {
         walker.render(sqlAstArguments.get(0), SqlAstNodeRenderingMode.DEFAULT);
         sqlAppender.append(" @> ");
         walker.render(sqlAstArguments.get(1), SqlAstNodeRenderingMode.DEFAULT);
@@ -50,8 +51,9 @@ public class JsonSqmPathFunctionDescriptor extends AbstractSqmSelfRenderingFunct
     }
 
     public static class JsonSqmPathFunctionReturnTypeResolver implements FunctionReturnTypeResolver {
+
         @Override
-        public ReturnableType<?> resolveFunctionReturnType(ReturnableType<?> impliedType, List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
+        public ReturnableType<?> resolveFunctionReturnType(ReturnableType<?> impliedType, Supplier<MappingModelExpressible<?>> inferredTypeSupplier, List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
             return typeConfiguration.getBasicTypeRegistry().resolve(BooleanJavaType.class, SqlTypes.BOOLEAN);
         }
 

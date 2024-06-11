@@ -13,7 +13,7 @@ public class LoadAuditEventListener implements PreLoadEventListener {
     public void onPreLoad(PreLoadEvent event) {
         var ent = event.getEntity();
         if (ent instanceof ClearingRecord clearingRecord) {
-            clearingRecord.setId(1002L);
+            log.info("clearing record on preload event");
         }
         log.debug("Load event for Entity: {}", event.getId());
     }

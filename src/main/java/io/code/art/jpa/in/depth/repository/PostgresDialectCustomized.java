@@ -1,19 +1,15 @@
 package io.code.art.jpa.in.depth.repository;
 
 import io.code.art.jpa.in.depth.repository.function.descriptors.JsonSqmPathFunctionDescriptor;
-import io.code.art.jpa.in.depth.repository.function.descriptors.TSQueryFunctionDescriptor;
+import io.code.art.jpa.in.depth.repository.functions.TSQueryFunctionDescriptor;
 import io.code.art.jpa.in.depth.types.RecordAttributeJavaType;
 import io.code.art.jpa.in.depth.types.RecordAttributeJdbcType;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
@@ -43,9 +39,9 @@ public class PostgresDialectCustomized extends PostgreSQLDialect {
         );
 
         functionRegister.register(
-                TSQueryFunctionDescriptor.FUNCTION_KEY,
+                TSQueryFunctionDescriptor.FUNCTION_NAME,
                 new TSQueryFunctionDescriptor(
-                        TSQueryFunctionDescriptor.FUNCTION_KEY,
+                        TSQueryFunctionDescriptor.FUNCTION_NAME,
                         StandardArgumentsValidators.exactly(2),
                         StandardFunctionReturnTypeResolvers.invariant(
                                 typeConfiguration.getBasicTypeRegistry().resolve(StandardBasicTypes.BOOLEAN)

@@ -2,6 +2,7 @@ package io.code.art.jpa.in.depth.configuration;
 
 import io.code.art.jpa.in.depth.repository.functions.JsonContains;
 import io.code.art.jpa.in.depth.repository.functions.NumericValueJsonPath;
+import io.code.art.jpa.in.depth.repository.functions.TSQueryFunctionDescriptor;
 import io.code.art.jpa.in.depth.types.RecordAttributeJavaType;
 import io.code.art.jpa.in.depth.types.RecordAttributeJdbcType;
 import org.hibernate.boot.model.FunctionContributions;
@@ -45,6 +46,18 @@ public class PostgresDialectCustomized extends PostgreSQLDialect {
                 new NumericValueJsonPath(
                         io.code.art.jpa.in.depth.repository.functions.NumericValueJsonPath.FUNCTION_NAME,
                         new NumericValueJsonPath.NumericValueJsonPathArgumentsValidator(),
+                        StandardFunctionReturnTypeResolvers.invariant(
+                                typeConfiguration.getBasicTypeRegistry().resolve(StandardBasicTypes.BOOLEAN)
+                        ),
+                        (function, argumentIndex, converter) -> converter.determineValueMapping(function)
+                )
+        );
+
+        functionRegistry.register(
+                io.code.art.jpa.in.depth.repository.functions.TSQueryFunctionDescriptor.FUNCTION_NAME,
+                new TSQueryFunctionDescriptor(
+                        io.code.art.jpa.in.depth.repository.functions.TSQueryFunctionDescriptor.FUNCTION_NAME,
+                        StandardArgumentsValidators.exactly(2),
                         StandardFunctionReturnTypeResolvers.invariant(
                                 typeConfiguration.getBasicTypeRegistry().resolve(StandardBasicTypes.BOOLEAN)
                         ),
