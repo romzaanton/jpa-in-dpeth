@@ -3,23 +3,22 @@ spring:
     init:
       mode: always
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:32021/postgres}
+    url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:32011/jpa}
     username: ${DATABASE_USER:postgres}
     password: ${DATABASE_PASSWORD:password}
-    initialization-mode:
     hikari:
       pool-name: hc-pool-1
       schema: ${DATABASE_SCHEMA:public}
   jpa:
+    database-platform: org.hibernate.dialect.PostgresDialectCustomized
+    show-sql: true
     hibernate:
-      ddl-auto: none
-
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
-        dialect: io.code.art.jpa.in.depth.repository.PostgresDialectCustomized
-        jdbc:
-          batch_size: 5
+        dialect: io.code.art.jpa.in.depth.configuration.PostgresDialectCustomized
+        dialect_resolvers: io.code.art.jpa.in.depth.configuration.CustomDialectResolver
 
 management:
   endpoints:
@@ -40,4 +39,12 @@ logging:
   level:
     root: INFO
     org:
-      hibernate: TRACE
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+        orm:
+          jdbc:
+            bind: TRACE

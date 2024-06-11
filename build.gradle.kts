@@ -1,11 +1,14 @@
 plugins {
 	java
-	id("org.springframework.boot") version "3.2.0"
-	id("io.spring.dependency-management") version "1.1.4"
+	antlr
+	id("org.springframework.boot") version "3.3.0"
+	id("io.spring.dependency-management") version "1.1.5"
 }
 
 group = "io.code.art.jpa.in"
 version = "0.0.1-SNAPSHOT"
+
+val antlrVersion = "4.13.1"
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_17
@@ -25,24 +28,34 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
-	annotationProcessor("org.hibernate:hibernate-jpamodelgen:6.1.7.Final")
-	compileOnly("org.projectlombok:lombok")
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	implementation("org.postgresql:postgresql")
-	annotationProcessor("org.projectlombok:lombok")
+	implementation("org.springframework.retry:spring-retry:2.0.5")
 
-	testCompileOnly("org.projectlombok:lombok")
-	testAnnotationProcessor("org.projectlombok:lombok")
+
+	// Common dependencies
+	compileOnly("org.projectlombok:lombok")
+	annotationProcessor("org.projectlombok:lombok")
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
+	antlr("org.antlr:antlr4:$antlrVersion")
+	implementation("org.antlr:antlr4:$antlrVersion")
+	implementation("org.antlr:antlr4-runtime:$antlrVersion")
+
+	// Database dependencies
+	annotationProcessor("org.hibernate:hibernate-jpamodelgen:6.1.7.Final")
+	implementation("org.postgresql:postgresql")
+
+	testImplementation("org.testcontainers:testcontainers:1.19.4")
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.testcontainers:postgresql:1.19.4")
+	testImplementation("org.testcontainers:junit-jupiter:1.19.4")
+
 	testImplementation("com.github.javafaker:javafaker:1.0.2") {
-		exclude(group= "org.yaml", module = "snakeyaml")
+		exclude(group = "org.yaml", module = "snakeyaml")
 	}
 	testImplementation("org.yaml:snakeyaml:2.2")
 
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.springframework.boot:spring-boot-testcontainers")
-	testImplementation("org.junit.jupiter:junit-jupiter-engine:5.10.1")
-	testImplementation("org.testcontainers:junit-jupiter")
-	testImplementation("org.testcontainers:postgresql")
+	testCompileOnly("org.projectlombok:lombok")
+	testAnnotationProcessor("org.projectlombok:lombok")
+
 }
 
 tasks.withType<Test> {

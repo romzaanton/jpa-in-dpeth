@@ -20,18 +20,9 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "CLEARING_RECORD")
-@FilterDef(
-        name = ClearingRecord.PARTITION_KEY,
-        parameters = {
-                @ParamDef(name = ClearingRecord.PARTITION_KEY, type = Object.class)
-        }
-)
-@Filter(
-        name = ClearingRecord.PARTITION_KEY,
-        condition = "transaction_date = :transactionDate"
-)
-public class ClearingRecord {
+@ToString
+@Table(name = "TRANSACTION_RECORD")
+public class TransactionRecord {
     public static final String PARTITION_KEY = "transactionDate";
     @Id
     @Column(name = "id")
@@ -53,17 +44,4 @@ public class ClearingRecord {
     private Double transAmount;
     @Column(name = "comment_text")
     private String commentText;
-
-    @JavaType(RecordAttributeJavaType.class)
-    @JdbcType(RecordAttributeJdbcType.class)
-    @Column(name = "attributes")
-    private Map<String, Serializable> attributes;
-
-    @JsonAnyGetter
-    @JsonAnySetter
-    @JavaType(RecordAttributeJavaType.class)
-    @JdbcType(RecordAttributeJdbcType.class)
-    @Column(name = "unmapped")
-    private Map<String, Object> unmapped = new LinkedHashMap<>();
-
 }

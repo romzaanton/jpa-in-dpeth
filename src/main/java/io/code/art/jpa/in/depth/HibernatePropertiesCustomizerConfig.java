@@ -1,12 +1,12 @@
 package io.code.art.jpa.in.depth;
 
-import io.code.art.jpa.in.depth.events.CustomStatementInterceptor;
 import io.code.art.jpa.in.depth.models.ClearingRecord;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.*;
 import org.hibernate.integrator.spi.Integrator;
@@ -14,6 +14,7 @@ import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.JpaSettings;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -29,10 +30,6 @@ public class HibernatePropertiesCustomizerConfig implements HibernatePropertiesC
         hibernateProperties.put(
                 JpaSettings.INTEGRATOR_PROVIDER,
                 (IntegratorProvider) () -> List.of(partitionAwareIntegrator)
-        );
-        hibernateProperties.put(
-                JdbcSettings.STATEMENT_INSPECTOR,
-                CustomStatementInterceptor.class.getTypeName()
         );
     }
 
@@ -121,6 +118,7 @@ public class HibernatePropertiesCustomizerConfig implements HibernatePropertiesC
 
         @Override
         public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+
         }
     }
 }

@@ -15,61 +15,33 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
 @Component
+@EnableRetry
 @SpringBootApplication
 @RequiredArgsConstructor
-public class DepthApplication implements ApplicationRunner {
+public class DepthApplication {
+    private final ClearingRecordRepository clearingRecordRepository;
+    private final ApplicationContext applicationContext;
+    private final EntityManager entityManager;
+    private final EntityManagerFactory entityManagerFactory;
 
     public static void main(String[] args) {
         SpringApplication.run(DepthApplication.class, args);
     }
 
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-        log.info("Application runner in action");
+    @SuppressWarnings("rawtypes")
+    private void customCall() {
+        var bt = new BasicTypeImpl<Map>(new RecordAttributeJavaType(), new RecordAttributeJdbcType());
+        var query = entityManager
+                .createQuery("SELECT dr FROM ClearingRecord dr WHERE jsonContains(dr.attributes, :attribute)", ClearingRecord.class)
+                .setParameter("attribute", new TypedParameterValue<>(bt, Map.of("key-1", 2)));
 
-//        var sf = sessionFactory.unwrap(SessionFactoryImpl.class).getQueryEngine();
-//        var sqmTranslator = sf.getSqmTranslatorFactory();
-//        var sqlSelection = new SqmSelectStatement<ClearingRecord>(SqmQuerySource.OTHER, sf.getCriteriaBuilder());
-//        var sqlSelection_ = new SqmSelectClause(false, sf.getCriteriaBuilder());
-//        sqlSelection.getQuerySpec().setSelectClause(sqlSelection_);
-//        var root = sqlSelection.from(ClearingRecord.class);
-//        var from = new SqmFromClause(1);
-//        from.addRoot(root);
-//        sqlSelection.select(root);
-//
-//        var sqmConverter = sqmTranslator.createSelectTranslator(
-//                sqlSelection,
-//                new SimpleQueryOptions(new LockOptions(), true),
-//                DomainParameterXref.empty(),
-//                null,
-//                new LoadQueryInfluencers(sf.getCriteriaBuilder().getSessionFactory()),
-//                sessionFactory.unwrap(SqlAstCreationContext.class),
-//                false
-//        );
-//
-//        var ast = sqmConverter.translate().getSqlAst();
-//
-//
-//
-//        final JdbcServices jdbcServices = sessionFactory.unwrap(SessionFactoryImpl.class).getJdbcServices();
-//
-//        final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-//        final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-//        final var translator = sqlAstTranslatorFactory.buildSelectTranslator(sessionFactory.unwrap(SessionFactoryImplementor.class), ast);
-//        final var jdbcSelect = translator.translate(new JdbcParameterBindingsImpl(0), new SimpleQueryOptions(LockOptions.NONE, true));
-
-
-//        clearingRecordRepository.findAll(new ClearingRecordSearchSpecification());
-
+        query.getResultList().forEach(value -> log.info("{}", value));
     }
-
-
 }
